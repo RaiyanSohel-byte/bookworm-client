@@ -1,7 +1,8 @@
 "use client";
-import { useAuth } from "@/context/AuthContext";
+
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();

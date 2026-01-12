@@ -76,12 +76,6 @@ export default function LoginPage() {
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-widest ml-1">
                 Passkey
               </label>
-              <button
-                type="button"
-                className="text-[10px] text-moss font-bold hover:underline"
-              >
-                Forgot?
-              </button>
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
