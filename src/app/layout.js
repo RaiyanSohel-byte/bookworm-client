@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="bg-parchment text-walnut">
         <AuthProvider>
-          <main className="min-h-screen px-4">{children}</main>
+          <main className="min-h-screen">{children}</main>
         </AuthProvider>
       </body>
     </html>
