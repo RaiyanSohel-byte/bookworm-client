@@ -6,7 +6,7 @@ export default function UserLayout({ children }) {
   return (
     <ProtectedRoute role="user">
       <Navbar />
-      <main className="min-h-screen px-4 md:px-10">{children}</main>
+      <main className="min-h-screen">{children}</main>
       <Footer />
     </ProtectedRoute>
   );

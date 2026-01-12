@@ -38,7 +38,7 @@ export default function Navbar() {
       >
         <div className="flex justify-between items-center h-12">
           {/* logo */}
-          <Link href="/library" className="flex items-center gap-3 group">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="bg-yellow-900/30 p-2 rounded-full border border-yellow-800/40 group-hover:border-yellow-500/50 transition-all duration-500">
               <BookOpen className="text-white" size={18} />
             </div>

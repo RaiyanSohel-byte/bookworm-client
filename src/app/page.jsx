@@ -10,7 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push(user.role === "admin" ? "/dashboard" : "/library");
+      router.push(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
     }
   }, [user, loading]);
 

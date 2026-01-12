@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (data) => {
     const res = await api.post("/login", data);
     setUser(res.data);
-    router.push(res.data.role === "admin" ? "/admin-dashboard" : "/library");
+    router.push(res.data.role === "admin" ? "/admin-dashboard" : "/dashboard");
   };
 
   const logout = async () => {

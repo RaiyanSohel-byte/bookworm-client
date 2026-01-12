@@ -1,9 +1,9 @@
 "use client";
 
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from "chart.js";
 
-ChartJS.register(ArcElement, Tooltip, Legend, Title);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function GenrePieChart({ data = [] }) {
   return (
@@ -12,27 +12,16 @@ export default function GenrePieChart({ data = [] }) {
         labels: data.map((d) => d.genre),
         datasets: [
           {
-            label: "Books per Genre",
             data: data.map((d) => d.count),
             backgroundColor: [
-              "#4ADE80",
-              "#22D3EE",
-              "#FBBF24",
-              "#F87171",
-              "#A78BFA",
-              "#F472B6",
+              "#7A8450",
+              "#5C4033",
+              "#F5F1E6",
+              "#3f4f46",
+              "#a16207",
             ],
-            borderColor: "#fff",
-            borderWidth: 1,
           },
         ],
-      }}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: { position: "right" },
-          title: { display: true, text: "Books per Genre" },
-        },
       }}
     />
   );
