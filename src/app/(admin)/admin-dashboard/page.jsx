@@ -102,7 +102,7 @@ export default function AdminDashboard() {
                   {stats.pendingReviews}
                 </span>
                 <div className="mt-4">
-                  <button className="text-xs bg-moss text-white px-3 py-1 rounded-full hover:bg-[#3d4d40] transition-colors">
+                  <button className="text-xs bg-moss text-white px-3 py-1 rounded-full cursor-pointer bg-[#3d4d40] hover:scale-105 transition-colors">
                     Review Queue →
                   </button>
                 </div>
