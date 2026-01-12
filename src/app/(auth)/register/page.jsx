@@ -61,7 +61,6 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] px-4">
-      {/* Decorative Background Element: Subtle book pattern or soft gradient */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]"></div>
 
       <div className="relative bg-white p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-stone-100 w-full max-w-md overflow-hidden">
@@ -123,7 +122,7 @@ export default function Register() {
             />
           </div>
 
-          {/* Stylized File Upload */}
+          {/* File Upload */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider ml-1">
               Profile Portrait
