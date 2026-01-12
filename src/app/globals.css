@@ -1,7 +1,21 @@
 @import "tailwindcss";
 
-@theme {
-  --color-parchment: #f5f1e6;
-  --color-walnut: #5c4033;
-  --color-moss: #7a8450;
+:root {
+  --parchment: #f5f1e6;
+  --walnut: #5c4033;
+  --moss: #7a8450;
+}
+
+.input {
+  @apply w-full p-2 border rounded focus:outline-none;
+  background-color: var(--parchment);
+}
+
+.btn-primary {
+  @apply text-white px-4 py-2 rounded transition;
+  background-color: var(--walnut);
+}
+
+.btn-primary:hover {
+  background-color: var(--moss);
 }
