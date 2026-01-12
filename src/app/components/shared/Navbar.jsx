@@ -2,219 +2,137 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
+import { usePathname } from "next/navigation";
 import {
-  BookOpen,
   Library,
   Compass,
   GraduationCap,
-  LayoutDashboard,
-  BookMarked,
-  Users,
-  MessageSquare,
   LogOut,
   Menu,
   X,
-  User,
-  School,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
-  const navLinkClass =
-    "flex items-center gap-2 text-stone-300 hover:text-moss transition-colors duration-200 font-medium text-sm tracking-wide";
+  const navItems = [
+    { name: "My Library", href: "/library", icon: Library },
+    { name: "Browse", href: "/browse", icon: Compass },
+    { name: "Tutorials", href: "/tutorials", icon: GraduationCap },
+  ];
 
   return (
-    <nav className="bg-[#1a1614] border-b border-stone-800 text-[#F5F2ED] px-6 py-4 shadow-2xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <Link
-          href={user?.role === "admin" ? "/dashboard" : "/library"}
-          className="group flex items-center gap-2 text-2xl font-serif font-bold tracking-tight hover:opacity-90 transition-opacity"
-        >
-          <div className="bg-moss p-1.5 rounded-lg shadow-inner shadow-black/20 group-hover:rotate-3 transition-transform">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <span className="bg-gradient-to-r from-parchment to-stone-400 bg-clip-text text-transparent">
-            BookWorm
-          </span>
-        </Link>
+    <header className="fixed top-4 inset-x-0 z-50 flex justify-center px-4">
+      <nav
+        className={`
+          w-full max-w-6xl bg-[#1a1614]/95 backdrop-blur-md 
+          text-stone-200 border border-stone-800/60 shadow-2xl 
+          transition-all duration-300 ease-in-out
+          ${open ? "rounded-3xl" : "rounded-full"} 
+          px-6 py-2
+        `}
+      >
+        <div className="flex justify-between items-center h-12">
+          {/* logo */}
+          <Link href="/library" className="flex items-center gap-3 group">
+            <div className="bg-yellow-900/30 p-2 rounded-full border border-yellow-800/40 group-hover:border-yellow-500/50 transition-all duration-500">
+              <BookOpen className="text-white" size={18} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold leading-none tracking-tight font-serif text-stone-100">
+                Book<span className="text-yellow-400">Worm</span>
+              </span>
+            </div>
+          </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-8">
-          {user ? (
-            <>
-              {/* Role-Based Links */}
-              <div className="flex items-center space-x-6 border-r border-stone-800 pr-8">
-                {user.role === "user" ? (
-                  <>
-                    <Link href="/library" className={navLinkClass}>
-                      <Library size={18} /> My Sanctuary
-                    </Link>
-                    <Link href="/browse" className={navLinkClass}>
-                      <Compass size={18} /> The Collection
-                    </Link>
-                    <Link href="/tutorials" className={navLinkClass}>
-                      <GraduationCap size={18} /> Study Hall
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/admin-dashboard" className={navLinkClass}>
-                      <LayoutDashboard size={18} /> Home
-                    </Link>
-                    <Link href="/books" className={navLinkClass}>
-                      <BookMarked size={18} /> Manage Books
-                    </Link>
-                    <Link href="/users" className={navLinkClass}>
-                      <Users size={18} /> Manage Users
-                    </Link>
-                    <Link href="/reviews" className={navLinkClass}>
-                      <MessageSquare size={18} /> Moderate Reviews
-                    </Link>
-                    <Link href="/reviews" className={navLinkClass}>
-                      <School size={18} /> Manage Tutorials
-                    </Link>
-                  </>
-                )}
-              </div>
-
-              {/* User Profile & Logout */}
-              <div className="flex items-center gap-4 pl-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-900 rounded-full border border-stone-800">
-                  <div className="w-6 h-6 rounded-full bg-moss/20 flex items-center justify-center">
-                    <User size={14} className="text-moss" />
-                  </div>
-                  <span className="text-xs font-semibold text-stone-400 uppercase tracking-tighter">
-                    {user.role}
-                  </span>
-                </div>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-2 bg-moss/10 hover:bg-moss text-moss hover:text-white px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 border border-moss/20 shadow-lg shadow-moss/5"
+          {/*  Desktop Navigation  */}
+          <div className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    isActive
+                      ? "text-amber-200 bg-stone-800 shadow-inner"
+                      : "text-stone-400 hover:text-stone-100 hover:bg-stone-800/40"
+                  }`}
                 >
-                  <LogOut size={16} />
-                  Leave Room
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-6">
-              <Link
-                href="/login"
-                className="text-stone-400 hover:text-white font-medium transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="bg-moss text-white px-6 py-2 rounded-full font-bold hover:bg-[#3d4d40] shadow-lg shadow-moss/20 transition-all active:scale-95"
-              >
-                Register
-              </Link>
-            </div>
-          )}
+                  <item.icon
+                    size={16}
+                    className={isActive ? "text-amber-500" : "text-stone-500"}
+                  />
+                  {item.name}
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                  )}
+                </Link>
+              );
+            })}
+
+            <div className="w-[1px] h-4 bg-stone-800 mx-3" />
+
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 text-stone-500 hover:text-red-400 px-3 py-2 transition-all text-[10px] font-black uppercase tracking-[0.2em]"
+            >
+              <LogOut size={14} />
+              Exit
+            </button>
+          </div>
+
+          {/* Mobile Toggle */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setOpen(!open)}
+              className="p-2 text-stone-400 hover:bg-stone-800 rounded-full transition-colors"
+            >
+              {open ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <div className="md:hidden">
-          <button
-            onClick={() => setOpen(!open)}
-            className="p-2 text-stone-400 hover:text-moss transition-colors"
-          >
-            {open ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
-      </div>
+        {/* Mobile Menu */}
+        {open && (
+          <div className="md:hidden mt-2 pb-4 space-y-1 border-t border-stone-800 pt-4 animate-in fade-in zoom-in-95 duration-200">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-4 p-3 rounded-full transition-all ${
+                    isActive
+                      ? "bg-emerald-950/30 text-emerald-400 border border-emerald-800/40"
+                      : "text-stone-400 hover:bg-stone-800/40"
+                  }`}
+                >
+                  <item.icon
+                    size={18}
+                    className={isActive ? "text-emerald-500" : ""}
+                  />
+                  <span className="font-bold text-xs uppercase tracking-widest">
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
 
-      {/* Mobile Menu Overlay */}
-      {open && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-[#1a1614] border-b border-stone-800 p-6 flex flex-col space-y-4 animate-in slide-in-from-top-2 duration-300">
-          {user ? (
-            <>
-              {user.role === "user" ? (
-                <>
-                  <Link
-                    href="/library"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <Library size={20} /> My Library
-                  </Link>
-                  <Link
-                    href="/browse"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <Compass size={20} /> Browse
-                  </Link>
-                  <Link
-                    href="/tutorials"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <GraduationCap size={20} /> Tutorials
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/admin-dashboard"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <LayoutDashboard size={20} /> Dashboard
-                  </Link>
-                  <Link
-                    href="/books"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <BookMarked size={20} /> Manage Books
-                  </Link>
-                  <Link
-                    href="/users"
-                    className={navLinkClass}
-                    onClick={() => setOpen(false)}
-                  >
-                    <Users size={20} /> Users
-                  </Link>
-                </>
-              )}
-              <hr className="border-stone-800" />
-              <button
-                onClick={() => {
-                  logout();
-                  setOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 bg-red-900/20 text-red-400 py-3 rounded-xl border border-red-900/30"
-              >
-                <LogOut size={18} /> Logout
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="w-full py-3 text-center border border-stone-800 rounded-xl"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                onClick={() => setOpen(false)}
-                className="w-full py-3 text-center bg-moss text-white rounded-xl font-bold"
-              >
-                Register
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-    </nav>
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-3 p-3 mt-2 text-stone-500 hover:text-red-400 text-xs font-black uppercase tracking-widest"
+            >
+              <LogOut size={16} /> Logout Archive
+            </button>
+          </div>
+        )}
+      </nav>
+    </header>
   );
 }

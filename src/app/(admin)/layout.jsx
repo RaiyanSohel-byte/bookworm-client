@@ -1,5 +1,3 @@
-"use client";
-
 import ProtectedRoute from "../components/routes/ProtectedRoute";
 import AdminSidebar from "../components/shared/AdminSidebar";
 

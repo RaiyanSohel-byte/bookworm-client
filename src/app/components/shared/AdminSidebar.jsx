@@ -42,7 +42,7 @@ export default function AdminSidebar() {
     { name: "Manage Genres", href: "/genres", icon: Tag },
     { name: "Manage Users", href: "/users", icon: Users },
     { name: "Moderate Reviews", href: "/reviews", icon: MessageSquare },
-    { name: "Manage Tutorials", href: "/tutorials", icon: School },
+    { name: "Manage Tutorials", href: "/admin-tutorials", icon: School },
   ];
 
   return (
