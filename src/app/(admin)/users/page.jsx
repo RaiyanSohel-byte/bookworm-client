@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import Image from "next/image";
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);
@@ -175,18 +176,27 @@ export default function ManageUsers() {
 
                 <div className="flex items-start gap-4 mb-6">
                   <div
-                    className={`p-3 rounded-full border-2 ${
+                    className={`p-3 rounded-full border-2 w-14 h-14 flex items-center justify-center overflow-hidden ${
                       u.role === "admin"
                         ? "bg-emerald-100 border-emerald-200 text-emerald-800"
                         : "bg-stone-100 border-stone-200 text-stone-400"
                     }`}
                   >
-                    {u.role === "admin" ? (
+                    {u.photo ? (
+                      <Image
+                        height={48}
+                        width={48}
+                        src={u.photo}
+                        alt={u.name}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : u.role === "admin" ? (
                       <UserCog size={24} />
                     ) : (
                       <User size={24} />
                     )}
                   </div>
+
                   <div>
                     <h3 className="text-xl font-serif font-bold text-stone-900 leading-tight">
                       {u.name}
