@@ -36,7 +36,7 @@ export default function BookCard({ book }) {
 
       <div className="space-y-1 flex-grow">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-serif font-bold text-xl text-stone-900 italic leading-tight group-hover:text-emerald-900 transition-colors">
+          <h3 className="font-serif line-clamp-2 font-bold text-xl text-stone-900 italic leading-tight group-hover:text-emerald-900 transition-colors">
             {book.title}
           </h3>
           <Bookmark
@@ -46,7 +46,8 @@ export default function BookCard({ book }) {
         </div>
 
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-stone-400">
-          Scribe: <span className="text-stone-600">{book.author}</span>
+          Scribe:{" "}
+          <span className="text-stone-600 line-clamp-1">{book.author}</span>
         </p>
       </div>
 

@@ -12,6 +12,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -102,9 +103,12 @@ export default function AdminDashboard() {
                   {stats.pendingReviews}
                 </span>
                 <div className="mt-4">
-                  <button className="text-xs bg-moss text-white px-3 py-1 rounded-full cursor-pointer bg-[#3d4d40] hover:scale-105 transition-colors">
+                  <Link
+                    href="/reviews"
+                    className="text-xs bg-moss text-white px-3 py-1 rounded-full cursor-pointer bg-[#3d4d40] hover:scale-105 transition-colors"
+                  >
                     Review Queue →
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

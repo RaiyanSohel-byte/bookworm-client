@@ -21,7 +21,7 @@ import api from "@/app/lib/api";
 
 export default function ManageBooks() {
   const [books, setBooks] = useState([]);
-  const [genres, setGenres] = useState([]); // New state for fetched genres
+  const [genres, setGenres] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editBook, setEditBook] = useState(null);
@@ -32,22 +32,21 @@ export default function ManageBooks() {
   const emptyForm = {
     title: "",
     author: "",
-    genre: "", // Initialized as empty for dynamic selection
+    genre: "",
     description: "",
     cover: null,
   };
 
   const [formData, setFormData] = useState(emptyForm);
 
-  // Updated useEffect to fetch both books and genres
   useEffect(() => {
     const fetchArchiveData = async () => {
       try {
         const [booksRes, genresRes] = await Promise.all([
-          api.get("/books"),
-          api.get("/admin/genres"), // Assuming your endpoint for genres is /genres
+          api.get("/books?page=1&limit=100"),
+          api.get("/admin/genres"),
         ]);
-        setBooks(booksRes.data);
+        setBooks(booksRes.data.books);
         setGenres(genresRes.data);
       } catch (err) {
         toast.error("Archive sync failed");
@@ -69,7 +68,7 @@ export default function ManageBooks() {
     setEditBook(null);
     setFormData({
       ...emptyForm,
-      genre: genres[0]?.name || "", // Default to first available genre
+      genre: genres[0]?.name || "",
     });
     setIsModalOpen(true);
   };
@@ -235,7 +234,6 @@ export default function ManageBooks() {
           </div>
         </div>
 
-        {/* Delete Confirmation Modal (Unchanged) */}
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             <div
@@ -276,7 +274,6 @@ export default function ManageBooks() {
           </div>
         )}
 
-        {/* Update/Create Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-6">
             <div
@@ -351,7 +348,7 @@ export default function ManageBooks() {
                         </option>
                       ))}
                     </select>
-                    {/* Custom Arrow for the Select box */}
+
                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
                       <div className="border-t-4 border-l-4 border-r-4 border-t-stone-900 border-l-transparent border-r-transparent"></div>
                     </div>

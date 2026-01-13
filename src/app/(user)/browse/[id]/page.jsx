@@ -309,9 +309,9 @@ const BookDetails = () => {
               Recommended For You
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {recommended.map((rec) => (
+              {recommended.map((rec, i) => (
                 <div
-                  key={rec._id}
+                  key={i + 1}
                   className="bg-white border-2 border-stone-900 p-4"
                 >
                   <Image

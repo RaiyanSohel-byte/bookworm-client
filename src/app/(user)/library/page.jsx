@@ -111,7 +111,40 @@ export default function MyLibrary() {
 
                         <BookCard book={book} />
 
-                        {/* Completion Badge */}
+                        {/* Reading progress for "Currently Studying" */}
+                        {shelfKey === "reading" &&
+                          book.pagesRead !== undefined &&
+                          book.totalPages && (
+                            <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-1">
+                              {/* Numeric progress */}
+                              <div className="text-[9px] font-mono text-stone-600 text-right">
+                                {book.pagesRead} / {book.totalPages} pages (
+                                {Math.min(
+                                  100,
+                                  Math.round(
+                                    (book.pagesRead / book.totalPages) * 100
+                                  )
+                                )}
+                                %)
+                              </div>
+                              {/* Progress bar */}
+                              <div className="bg-stone-200/30 rounded-full h-2 overflow-hidden">
+                                <div
+                                  className="bg-emerald-700 h-2 rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      Math.round(
+                                        (book.pagesRead / book.totalPages) * 100
+                                      )
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Completion Badge for "Completed Archives" */}
                         {shelfKey === "read" && (
                           <div className="absolute top-2 right-2 bg-emerald-100 text-emerald-700 p-1.5 rounded-full border border-emerald-200 shadow-sm">
                             <CheckCircle2 size={12} />
