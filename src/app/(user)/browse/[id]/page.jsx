@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import api from "@/app/lib/api";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 const BookDetails = () => {
   const { id } = useParams();
@@ -25,7 +26,19 @@ const BookDetails = () => {
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch book and approved reviews
+  const [shelf, setShelf] = useState(""); // "want", "reading", "read"
+  const [progress, setProgress] = useState({ pagesRead: 0, totalPages: 0 });
+
+  const [recommended, setRecommended] = useState([]);
+  const [shelves, setShelves] = useState({ want: [], reading: [], read: [] });
+
+  const [today, setToday] = useState("");
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString());
+  }, []);
+
+  // Fetch book, reviews, recommendations, and user shelves
   useEffect(() => {
     if (!id) return;
 
@@ -42,15 +55,35 @@ const BookDetails = () => {
 
     const fetchReviews = async () => {
       try {
-        const res = await api.get(`/reviews?bookId=${id}`);
+        const res = await api.get(`/reviews?bookId=${id}&status=approved`);
         setReviews(res.data);
       } catch (err) {
         console.error("Failed to load reviews", err);
       }
     };
 
+    const fetchRecommendations = async () => {
+      try {
+        const res = await api.get("/recommendations");
+        setRecommended(res.data);
+      } catch (err) {
+        console.error("Failed to load recommendations", err);
+      }
+    };
+
+    const fetchShelves = async () => {
+      try {
+        const res = await api.get("/library");
+        setShelves(res.data);
+      } catch (err) {
+        console.error("Failed to load library", err);
+      }
+    };
+
     fetchBook();
     fetchReviews();
+    fetchRecommendations();
+    fetchShelves();
   }, [id]);
 
   // Submit new review
@@ -67,13 +100,72 @@ const BookDetails = () => {
       };
       await api.post("/reviews", payload);
 
+      setReviews((prev) => [
+        ...prev,
+        {
+          ...payload,
+          _id: uuidv4(),
+          user: { name: "You", image: null, email: null },
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+
       setNewReview({ rating: 0, comment: "" });
       setShowReviewForm(false);
-      alert("Your review is submitted and pending approval.");
     } catch (err) {
       console.error("Failed to submit review", err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Add book to shelf
+  const addToShelf = async (type) => {
+    if (!type || !book) return;
+    setShelf(type);
+
+    try {
+      let entry;
+      if (type === "reading") {
+        entry = {
+          bookId: id,
+          title: book.title,
+          cover: book.cover,
+          pagesRead: progress.pagesRead || 0,
+          totalPages: progress.totalPages || 0,
+        };
+      } else {
+        entry = {
+          bookId: id,
+          title: book.title,
+          cover: book.cover,
+        };
+      }
+
+      await api.post("/users/shelves", {
+        bookId: id,
+        shelf: type,
+        progress: type === "reading" ? progress : undefined,
+        bookInfo: entry,
+      });
+
+      // Update local shelves state immediately
+      setShelves((prev) => ({
+        ...prev,
+        [type]: [...prev[type], entry],
+      }));
+
+      alert(
+        `Book added to "${
+          type === "want"
+            ? "Want to Read"
+            : type === "reading"
+            ? "Currently Reading"
+            : "Read"
+        }"`
+      );
+    } catch (err) {
+      console.error("Failed to add to shelf", err);
     }
   };
 
@@ -109,10 +201,27 @@ const BookDetails = () => {
             </span>
           </button>
 
-          <button className="flex items-center gap-2 bg-emerald-800 text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-900 transition-colors shadow-lg shadow-emerald-900/10">
-            <BookmarkPlus size={16} />
-            Add To Shelf
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => addToShelf("want")}
+              className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-colors"
+            >
+              <BookmarkPlus size={16} />
+              Want to Read
+            </button>
+            <button
+              onClick={() => addToShelf("reading")}
+              className="flex items-center gap-2 bg-emerald-800 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-900 transition-colors"
+            >
+              Currently Reading
+            </button>
+            <button
+              onClick={() => addToShelf("read")}
+              className="flex items-center gap-2 bg-stone-700 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-colors"
+            >
+              Read
+            </button>
+          </div>
         </div>
 
         {/* Book Info */}
@@ -192,6 +301,92 @@ const BookDetails = () => {
             </div>
           </div>
         </main>
+
+        {/* Recommendations */}
+        {recommended.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-3xl font-serif font-bold text-stone-900 italic mb-4">
+              Recommended For You
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {recommended.map((rec) => (
+                <div
+                  key={rec._id}
+                  className="bg-white border-2 border-stone-900 p-4"
+                >
+                  <Image
+                    src={rec.cover}
+                    width={150}
+                    height={220}
+                    alt={rec.title}
+                    className="object-cover"
+                  />
+                  <h3 className="font-serif font-bold italic mt-2">
+                    {rec.title}
+                  </h3>
+                  <p className="text-[10px] text-stone-500">{rec.author}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* My Shelves Section */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-serif font-bold text-stone-900 italic mb-4">
+            My Shelves
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {["want", "reading", "read"].map((type) => (
+              <div
+                key={type}
+                className="bg-white border-2 border-stone-900 p-4"
+              >
+                <h3 className="text-xl font-serif font-bold mb-4 capitalize">
+                  {type === "want"
+                    ? "Want to Read"
+                    : type === "reading"
+                    ? "Currently Reading"
+                    : "Read"}
+                </h3>
+                {shelves[type].length === 0 ? (
+                  <p className="text-stone-400 italic text-sm">
+                    No books in this shelf yet.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {shelves[type].map((b) => (
+                      <div
+                        key={b.bookId}
+                        className="flex items-center gap-3 border-b border-stone-200 pb-2"
+                      >
+                        {b.cover && (
+                          <Image
+                            src={b.cover}
+                            width={50}
+                            height={70}
+                            alt={b.title}
+                            className="object-cover"
+                          />
+                        )}
+                        <div className="flex flex-col">
+                          <span className="font-serif font-bold italic text-stone-900">
+                            {b.title}
+                          </span>
+                          {type === "reading" && (
+                            <span className="text-[10px] text-stone-500">
+                              {b.pagesRead}/{b.totalPages} pages read
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Reviews Section */}
         <section className="mt-20 border-t-4 border-stone-200 pt-20">

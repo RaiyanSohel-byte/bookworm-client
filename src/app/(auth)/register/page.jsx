@@ -64,7 +64,6 @@ export default function Register() {
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]"></div>
 
       <div className="relative bg-white p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-stone-100 w-full max-w-md overflow-hidden">
-        {/* Top Accent Bar */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-moss"></div>
 
         <div className="flex flex-col items-center mb-8">

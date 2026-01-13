@@ -14,9 +14,10 @@ export default function BookCard({ book }) {
 
       <div className="relative aspect-[3/4] overflow-hidden border border-stone-100 mb-5">
         <Image
-          fill
+          height={48}
+          width={48}
           src={book.cover}
-          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+          className="w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
           alt={book.title}
         />
 
@@ -49,7 +50,7 @@ export default function BookCard({ book }) {
 
       <div className="mt-6 pt-4 border-t border-dashed border-stone-200">
         <Link
-          href={`/browse/${book._id}`}
+          href={`/browse/${book?._id || book.bookId}`}
           className="flex items-center justify-center gap-2 w-full bg-stone-50 border border-stone-200 py-3 text-[10px] font-black uppercase tracking-widest text-stone-600 hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-all"
         >
           <FileSearch size={14} />

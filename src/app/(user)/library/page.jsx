@@ -20,7 +20,6 @@ export default function MyLibrary() {
       </div>
     );
 
-  // Light Mode Shelf Configuration
   const shelfConfig = {
     reading: {
       label: "Currently Studying",
@@ -101,9 +100,9 @@ export default function MyLibrary() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
-                    {books.map((book) => (
+                    {books.map((book, index) => (
                       <div
-                        key={book._id}
+                        key={`${shelfKey}-${book._id || book.bookId || index}`}
                         className="group relative transition-all duration-500 hover:-translate-y-3"
                       >
                         <div
