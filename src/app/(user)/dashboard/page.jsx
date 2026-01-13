@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import ReadingProgressChart from "@/app/components/charts/ReadingProgressChart";
 import BookCard from "@/app/components/shared/BookCard";
-import { BookOpen, Trophy, Flame, Library } from "lucide-react";
+import { Trophy, Flame, Library } from "lucide-react";
 import api from "@/app/lib/api";
 import GenrePieChart from "@/app/components/charts/GenrePieChart";
 
@@ -50,7 +50,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* left col : goals */}
           <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white border border-stone-200 p-8 rounded-[2rem] shadow-xl shadow-stone-200/50 relative group overflow-hidden">
+            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl shadow-stone-200/50 relative group overflow-hidden">
               <div className="absolute -top-4 -right-4 w-12 h-12 border-t border-r border-amber-200 rounded-tr-2xl" />
 
               <h2 className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function Dashboard() {
 
           {/* right colo : analytics */}
           <div className="lg:col-span-2 grid md:grid-cols-2 gap-8">
-            <div className="bg-white border border-stone-200 p-8 rounded-[2rem] shadow-xl shadow-stone-200/50">
+            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl shadow-stone-200/50">
               <h3 className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 border-b border-stone-100 pb-4">
                 I. Literary Genre Analytics
               </h3>
@@ -122,7 +122,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white border border-stone-200 p-8 rounded-[2rem] shadow-xl shadow-stone-200/50">
+            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl shadow-stone-200/50">
               <h3 className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8 border-b border-stone-100 pb-4">
                 II. Temporal Reading Progress
               </h3>
@@ -139,7 +139,7 @@ export default function Dashboard() {
             <h2 className="text-3xl font-serif font-bold italic text-stone-900 whitespace-nowrap">
               Curated <span className="text-amber-700">Selection</span>
             </h2>
-            <div className="h-[1px] w-full bg-stone-200" />
+            <div className="h-px w-full bg-stone-200" />
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
