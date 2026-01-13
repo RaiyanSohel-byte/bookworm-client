@@ -1,157 +1,213 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import {
   Trash2,
   ShieldCheck,
   Plus,
-  BookText,
-  AlertCircle,
   X,
-  Upload,
-  BookOpen,
   TriangleAlert,
+  Pencil,
+  BookOpen,
+  Image as ImageIcon,
+  Type,
 } from "lucide-react";
 import api from "@/app/lib/api";
 import ProtectedRoute from "@/app/components/routes/ProtectedRoute";
+import Image from "next/image";
+import toast from "react-hot-toast";
 
 export default function ManageBooks() {
   const [books, setBooks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null); // Tracks book to be deleted
+  const [deleteId, setDeleteId] = useState(null);
+  const [editBook, setEditBook] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const emptyForm = {
     title: "",
     author: "",
     genre: "Philosophy",
     description: "",
     cover: null,
-  });
-
-  useEffect(() => {
-    api.get("/books").then((res) => setBooks(res.data));
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
+  const [formData, setFormData] = useState(emptyForm);
+
+  useEffect(() => {
+    api
+      .get("/books")
+      .then((res) => setBooks(res.data))
+      .finally(() => setInitialLoading(false));
+  }, []);
+
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleFileChange = (e) =>
     setFormData((prev) => ({ ...prev, cover: e.target.files[0] }));
+
+  const openCreateModal = () => {
+    setEditBook(null);
+    setFormData(emptyForm);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (book) => {
+    setEditBook(book);
+    setFormData({
+      title: book.title,
+      author: book.author,
+      genre: book.genre,
+      description: book.description,
+      cover: null,
+    });
+    setIsModalOpen(true);
   };
 
   const submitBook = async (e) => {
     e.preventDefault();
+    setIsProcessing(true);
+
     const payload = new FormData();
-    payload.append("title", formData.title);
-    payload.append("author", formData.author);
-    payload.append("genre", formData.genre);
-    payload.append("description", formData.description);
-    if (formData.cover) payload.append("cover", formData.cover);
-
-    const res = await api.post("/books", payload, {
-      headers: { "Content-Type": "multipart/form-data" },
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) payload.append(key, value);
     });
 
-    setBooks((prev) => [...prev, res.data]);
-    setFormData({
-      title: "",
-      author: "",
-      genre: "Philosophy",
-      description: "",
-      cover: null,
-    });
-    setIsModalOpen(false);
+    try {
+      if (editBook) {
+        const res = await api.put(`/books/${editBook._id}`, payload);
+        setBooks((prev) =>
+          prev.map((b) => (b._id === editBook._id ? res.data : b))
+        );
+        toast.success("Volume updated successfully");
+      } else {
+        const res = await api.post("/books", payload);
+        setBooks((prev) => [...prev, res.data]);
+        toast.success("New volume indexed");
+      }
+
+      setIsModalOpen(false);
+      setEditBook(null);
+      setFormData(emptyForm);
+    } catch (err) {
+      toast.error("Protocol Error: Operation failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const confirmStrike = async () => {
-    if (!deleteId) return;
-    await api.delete(`/books/${deleteId}`);
-    setBooks((prev) => prev.filter((b) => b._id !== deleteId));
-    setDeleteId(null);
+    setIsProcessing(true);
+    try {
+      await api.delete(`/books/${deleteId}`);
+      setBooks((prev) => prev.filter((b) => b._id !== deleteId));
+      toast.success("Volume struck from records");
+      setDeleteId(null);
+    } catch {
+      toast.error("Strike Protocol Failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <ProtectedRoute role="admin">
-      <div className="min-h-screen bg-[#fdfbf7] py-20 pb-32 font-sans">
+      <div className="min-h-screen bg-[#fdfbf7] py-20 pb-32">
         <div className="max-w-6xl mx-auto px-6">
-          <header className="mb-12 border-b-4 border-stone-900 pb-8 flex flex-col md:flex-row justify-between items-end gap-6">
+          <header className="mb-12 border-b-4 border-stone-900 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <ShieldCheck className="text-emerald-800" size={20} />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-800">
-                  Administrative Access Granted
+                <ShieldCheck className="text-emerald-800" size={18} />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-800">
+                  Level 4 Administrative Access
                 </span>
               </div>
-              <h1 className="text-5xl font-serif font-bold text-stone-900 italic tracking-tight">
-                Archive{" "}
-                <span className="text-stone-500 underline decoration-1 underline-offset-8">
-                  Oversight
-                </span>
+              <h1 className="text-5xl font-serif font-bold text-stone-900 italic tracking-tight leading-none">
+                Archive Oversight
               </h1>
             </div>
 
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-stone-900 text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-colors border-none cursor-pointer"
+              onClick={openCreateModal}
+              className="flex items-center gap-2 bg-stone-900 text-stone-100 px-10 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-800 transition-colors shadow-xl shadow-stone-900/10"
             >
               <Plus size={16} />
               Index New Volume
             </button>
           </header>
 
-          <div className="flex items-center gap-4 mb-8 bg-stone-100 border-2 border-stone-200 p-5 rounded-2xl">
-            <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-stone-300 rounded-lg">
-              <BookText size={14} className="text-stone-600" />
-              <span className="text-[10px] font-bold text-stone-900 uppercase tracking-tight">
-                Current Records: {books.length}
-              </span>
-            </div>
-            <p className="text-[11px] font-serif italic text-stone-500">
-              Strike volumes only if they are no longer fit for the public
-              collection.
-            </p>
-          </div>
-
-          <div className="border-2 border-stone-900 rounded-2xl overflow-hidden bg-white">
+          <div className="border-[3px] border-stone-900 rounded-2xl overflow-hidden bg-white shadow-[12px_12px_0px_0px_rgba(28,25,23,0.05)]">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-stone-900 text-stone-100">
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest">
-                    Manuscript Title
+                <tr className="bg-stone-900 text-stone-100 uppercase text-[10px] font-black tracking-widest">
+                  <th className="px-8 py-5">Index Title</th>
+                  <th className="px-8 py-5 hidden md:table-cell border-l border-stone-800">
+                    Scribe / Author
                   </th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest hidden md:table-cell border-l border-stone-800">
-                    Scribe/Author
-                  </th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-right">
-                    Actions
+                  <th className="px-8 py-5 text-right border-l border-stone-800">
+                    Directives
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y-2 divide-stone-100">
+              <tbody>
                 {books.map((book) => (
                   <tr
                     key={book._id}
-                    className="hover:bg-stone-50 transition-colors group"
+                    className="border-t border-stone-100 hover:bg-stone-50 transition-colors group"
                   >
                     <td className="px-8 py-6">
-                      <span className="font-serif font-bold text-stone-900 text-xl group-hover:text-emerald-800 transition-colors">
-                        {book.title}
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-14 bg-stone-100 border border-stone-200 flex-shrink-0 relative overflow-hidden">
+                          {book.cover ? (
+                            <Image
+                              width={48}
+                              height={48}
+                              src={book.cover}
+                              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                              alt="cover"
+                            />
+                          ) : (
+                            <BookOpen
+                              size={16}
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-stone-300"
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-serif font-bold text-stone-900 text-lg leading-tight italic">
+                            {book.title}
+                          </p>
+                          <p className="text-[10px] font-mono text-stone-400 mt-1 uppercase">
+                            ID: {book._id.slice(-8)}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 hidden md:table-cell border-l border-stone-50">
+                      <span className="text-stone-600 font-medium">
+                        {book.author}
                       </span>
                     </td>
-                    <td className="px-8 py-6 hidden md:table-cell border-l border-stone-100">
-                      <span className="text-sm font-medium text-stone-500 uppercase tracking-wider">
-                        {book.author || "Unknown Scribe"}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <button
-                        onClick={() => setDeleteId(book._id)}
-                        className="inline-flex items-center gap-2 text-stone-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 px-4 py-2 rounded-lg transition-all text-[10px] font-black uppercase tracking-widest cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                        Strike Record
-                      </button>
+                    <td className="px-8 py-6 text-right border-l border-stone-50">
+                      <div className="flex justify-end items-center gap-4">
+                        <button
+                          onClick={() => openEditModal(book)}
+                          className="flex items-center gap-1.5 text-stone-400 hover:text-emerald-800 transition-colors text-[10px] font-black uppercase tracking-widest"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteId(book._id)}
+                          className="flex items-center gap-1.5 text-stone-400 hover:text-red-700 transition-colors text-[10px] font-black uppercase tracking-widest"
+                        >
+                          <Trash2 size={14} />
+                          Strike
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -161,40 +217,38 @@ export default function ManageBooks() {
         </div>
 
         {deleteId && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             <div
-              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity"
               onClick={() => setDeleteId(null)}
             />
-            <div className="relative w-full max-w-md bg-[#fdfbf7] border-[6px] border-stone-900 p-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-[#fdfbf7] border-[6px] border-stone-900 p-10 max-w-md w-full animate-in zoom-in-95 duration-200">
               <div className="flex flex-col items-center text-center">
                 <div className="bg-red-100 border-2 border-red-200 p-4 mb-6">
                   <TriangleAlert className="text-red-700" size={32} />
                 </div>
                 <h2 className="text-2xl font-serif font-bold text-stone-900 italic mb-2">
-                  Striking Verification
+                  Strike Entry?
                 </h2>
                 <p className="text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 mb-6">
-                  Archive Removal Protocol
+                  Permanent Record Deletion
                 </p>
-
                 <p className="text-stone-600 font-serif italic text-lg leading-relaxed mb-8">
-                  Are you certain you wish to permanently strike this volume
-                  from the Grand Catalog? This action cannot be undone.
+                  "This action is irreversible. The volume will be purged from
+                  the central registry."
                 </p>
-
                 <div className="flex flex-col w-full gap-3">
                   <button
                     onClick={confirmStrike}
-                    className="w-full bg-red-600 text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors border-none cursor-pointer"
+                    className="w-full bg-red-600 text-stone-100 py-4 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-colors"
                   >
                     Confirm Strike
                   </button>
                   <button
                     onClick={() => setDeleteId(null)}
-                    className="w-full bg-transparent text-stone-400 py-3 text-[10px] font-black uppercase tracking-widest hover:text-stone-900 transition-colors border-none cursor-pointer"
+                    className="w-full bg-transparent text-stone-400 py-2 text-[10px] font-black uppercase tracking-widest hover:text-stone-900 transition-colors"
                   >
-                    Keep Record
+                    Abort Directive
                   </button>
                 </div>
               </div>
@@ -203,130 +257,96 @@ export default function ManageBooks() {
         )}
 
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-40 flex items-center justify-center p-6">
             <div
               className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm"
               onClick={() => setIsModalOpen(false)}
             />
-            <div className="relative w-full max-w-2xl bg-[#fdfbf7] border-[6px] border-stone-900 p-8 md:p-12 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-[#fdfbf7] border-[6px] border-stone-900 p-12 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in duration-200">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 text-stone-400 hover:text-stone-900 transition-colors cursor-pointer"
+                className="absolute top-8 right-8 text-stone-400 hover:text-stone-900 transition-colors"
               >
                 <X size={28} />
               </button>
 
-              <div className="flex items-center gap-4 mb-10">
-                <div className="bg-amber-100 p-3 border-2 border-amber-200">
-                  <BookOpen className="text-amber-800" size={24} />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-serif font-bold text-stone-900 italic">
-                    Indexing Form
-                  </h2>
-                  <p className="text-[10px] uppercase tracking-[0.3em] font-black text-stone-400">
-                    Formal Archive Entry
-                  </p>
-                </div>
-              </div>
+              <header className="mb-10">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-800 mb-2">
+                  Registry Form 12-B
+                </p>
+                <h2 className="text-4xl font-serif font-bold text-stone-900 italic">
+                  {editBook ? "Update Volume" : "Index New Volume"}
+                </h2>
+              </header>
 
               <form className="space-y-8" onSubmit={submitBook}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                      Manuscript Title
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                      <Type size={12} /> Title of Work
                     </label>
                     <input
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      className="w-full bg-white border-2 border-stone-200 px-4 py-3 font-serif text-lg text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
-                      placeholder="The Divine Comedy"
+                      placeholder="The Republic"
                       required
+                      className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                      Primary Scribe
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                      <ShieldCheck size={12} /> Primary Scribe
                     </label>
                     <input
                       name="author"
                       value={formData.author}
                       onChange={handleChange}
-                      className="w-full bg-white border-2 border-stone-200 px-4 py-3 font-serif text-lg text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
-                      placeholder="Dante Alighieri"
+                      placeholder="Plato"
                       required
+                      className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                      Classification
-                    </label>
-                    <select
-                      name="genre"
-                      value={formData.genre}
-                      onChange={handleChange}
-                      className="w-full bg-white border-2 border-stone-200 px-4 py-3 font-serif text-stone-900 focus:outline-none focus:border-stone-900 appearance-none transition-colors cursor-pointer"
-                    >
-                      <option>Philosophy</option>
-                      <option>Classic Literature</option>
-                      <option>History</option>
-                      <option>Poetry</option>
-                      <option>Scientific Journal</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                      Visual Cover
-                    </label>
-                    <label className="flex items-center justify-between w-full bg-white border-2 border-dashed border-stone-300 px-4 py-3 text-stone-400 cursor-pointer hover:border-stone-900 hover:text-stone-900 transition-all">
-                      <span className="text-sm font-serif italic truncate">
-                        {formData.cover
-                          ? formData.cover.name
-                          : "Select parchment image..."}
-                      </span>
-                      <Upload size={18} />
-                      <input
-                        type="file"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                    Manuscript Abstract
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <BookOpen size={12} /> Manuscript Abstract
                   </label>
                   <textarea
                     name="description"
+                    rows={4}
                     value={formData.description}
                     onChange={handleChange}
-                    rows={4}
-                    className="w-full bg-white border-2 border-stone-200 px-4 py-4 font-serif text-stone-900 focus:outline-none focus:border-stone-900 transition-colors resize-none"
-                    placeholder="Describe the significance..."
+                    placeholder="Enter the foundational premise..."
+                    className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors resize-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-6 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 hover:text-red-600 transition-colors cursor-pointer"
-                  >
-                    Discard Draft
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-stone-900 text-white px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-800 transition-colors border-none cursor-pointer"
-                  >
-                    Commit to Archive
-                  </button>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <ImageIcon size={12} /> Visual Identifier (Cover)
+                  </label>
+                  <div className="relative border-2 border-dashed border-stone-200 p-8 text-center bg-white group hover:border-stone-900 transition-colors">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <p className="text-[11px] font-mono text-stone-400 uppercase group-hover:text-stone-900">
+                      {formData.cover
+                        ? formData.cover.name
+                        : "Select File for Archival Upload"}
+                    </p>
+                  </div>
                 </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-stone-900 text-stone-100 py-5 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-emerald-800 transition-all"
+                >
+                  {editBook ? "Finalize Update" : "Authorize Creation"}
+                </button>
               </form>
             </div>
           </div>

@@ -38,7 +38,6 @@ const BookDetails = () => {
     setToday(new Date().toLocaleDateString());
   }, []);
 
-  // Fetch book, reviews, recommendations, and user shelves
   useEffect(() => {
     if (!id) return;
 
@@ -149,7 +148,7 @@ const BookDetails = () => {
         bookInfo: entry,
       });
 
-      // Update local shelves state immediately
+      // Update local shelves
       setShelves((prev) => ({
         ...prev,
         [type]: [...prev[type], entry],
