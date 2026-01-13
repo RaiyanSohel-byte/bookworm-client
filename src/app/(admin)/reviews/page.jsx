@@ -69,7 +69,7 @@ export default function ModerateReviewsPage() {
     );
 
   return (
-    <div className="space-y-10 max-w-6xl mx-auto">
+    <div className="space-y-10 max-w-6xl mx-auto py-16">
       <header className="border-b-4 border-stone-900 pb-8">
         <div className="flex items-center gap-2 mb-2">
           <ShieldAlert className="text-emerald-800" size={18} />
