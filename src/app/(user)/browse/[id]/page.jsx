@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Book,
   History,
   Bookmark,
   BookmarkPlus,
@@ -26,7 +25,7 @@ const BookDetails = () => {
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch book and reviews
+  // Fetch book and approved reviews
   useEffect(() => {
     if (!id) return;
 
@@ -54,7 +53,7 @@ const BookDetails = () => {
     fetchReviews();
   }, [id]);
 
-  // Handle review form submission
+  // Submit new review
   const submitReview = async (e) => {
     e.preventDefault();
     if (!newReview.comment || newReview.rating === 0) return;
@@ -68,18 +67,9 @@ const BookDetails = () => {
       };
       await api.post("/reviews", payload);
 
-      // Update UI
-      setReviews((prev) => [
-        ...prev,
-        {
-          ...payload,
-          id: Date.now(), // temporary ID for UI
-          user: "Anonymous", // or get from user API
-          date: new Date().toLocaleDateString(),
-        },
-      ]);
       setNewReview({ rating: 0, comment: "" });
       setShowReviewForm(false);
+      alert("Your review is submitted and pending approval.");
     } catch (err) {
       console.error("Failed to submit review", err);
     } finally {
@@ -104,6 +94,7 @@ const BookDetails = () => {
   return (
     <div className="min-h-screen bg-[#fdfbf7] py-20 px-6">
       <div className="max-w-5xl mx-auto my-16">
+        {/* Header */}
         <div className="flex justify-between items-center mb-12">
           <button
             onClick={() => router.back()}
@@ -124,6 +115,7 @@ const BookDetails = () => {
           </button>
         </div>
 
+        {/* Book Info */}
         <main className="relative bg-white border-[6px] border-stone-900 p-8 md:p-16 mb-12">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-stone-100 pb-10 mb-12 gap-6">
             <div className="space-y-1">
@@ -201,6 +193,7 @@ const BookDetails = () => {
           </div>
         </main>
 
+        {/* Reviews Section */}
         <section className="mt-20 border-t-4 border-stone-200 pt-20">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div>
@@ -226,16 +219,22 @@ const BookDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {reviews.map((rev) => (
               <div
-                key={rev.id}
+                key={rev._id}
                 className="bg-white border-2 border-stone-900 p-8 relative"
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">
-                      Contributor
-                    </p>
+                  <div className="flex items-center gap-2">
+                    {rev.user.image && (
+                      <Image
+                        src={rev.user.image}
+                        width={32}
+                        height={32}
+                        alt={rev.user.name || "Anonymous"}
+                        className="rounded-full"
+                      />
+                    )}
                     <p className="font-serif font-bold italic text-stone-900">
-                      {rev.user}
+                      {rev.user.name || "Anonymous"}
                     </p>
                   </div>
                   <div className="flex gap-0.5">
@@ -255,13 +254,14 @@ const BookDetails = () => {
                   "{rev.comment}"
                 </p>
                 <p className="text-[9px] font-mono text-stone-400 uppercase tracking-tighter text-right border-t border-stone-100 pt-4">
-                  Stamped: {rev.date}
+                  Stamped: {new Date(rev.createdAt).toLocaleDateString()}
                 </p>
               </div>
             ))}
           </div>
         </section>
 
+        {/* Review Form */}
         {showReviewForm && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
@@ -276,14 +276,12 @@ const BookDetails = () => {
                 <X size={24} />
               </button>
 
-              <div className="mb-10">
-                <h2 className="text-3xl font-serif font-bold text-stone-900 italic">
-                  Witness Statement
-                </h2>
-                <p className="text-[10px] uppercase tracking-[0.3em] font-black text-stone-400">
-                  Formal Critique Entry
-                </p>
-              </div>
+              <h2 className="text-3xl font-serif font-bold text-stone-900 italic mb-2">
+                Witness Statement
+              </h2>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-black text-stone-400 mb-6">
+                Formal Critique Entry
+              </p>
 
               <form className="space-y-6" onSubmit={submitReview}>
                 <div className="space-y-2">
