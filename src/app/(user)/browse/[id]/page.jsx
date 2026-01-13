@@ -14,6 +14,7 @@ import {
 import api from "@/app/lib/api";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
+import toast from "react-hot-toast";
 
 const BookDetails = () => {
   const { id } = useParams();
@@ -154,7 +155,7 @@ const BookDetails = () => {
         [type]: [...prev[type], entry],
       }));
 
-      alert(
+      toast.success(
         `Book added to "${
           type === "want"
             ? "Want to Read"
@@ -354,9 +355,9 @@ const BookDetails = () => {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {shelves[type].map((b) => (
+                    {shelves[type].map((b, i) => (
                       <div
-                        key={b.bookId}
+                        key={i + 1}
                         className="flex items-center gap-3 border-b border-stone-200 pb-2"
                       >
                         {b.cover && (

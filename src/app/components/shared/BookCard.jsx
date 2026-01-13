@@ -13,13 +13,15 @@ export default function BookCard({ book }) {
       </div>
 
       <div className="relative aspect-[3/4] overflow-hidden border border-stone-100 mb-5">
-        <Image
-          height={48}
-          width={48}
-          src={book.cover}
-          className="w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
-          alt={book.title}
-        />
+        {book?.cover && (
+          <Image
+            height={48}
+            width={48}
+            src={book?.cover}
+            className="w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+            alt={book?.title || "Book"}
+          />
+        )}
 
         {book.reason && (
           <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm p-6 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">

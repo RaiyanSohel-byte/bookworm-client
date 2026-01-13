@@ -11,14 +11,17 @@ import {
   BookOpen,
   Image as ImageIcon,
   Type,
+  Layers,
 } from "lucide-react";
-import api from "@/app/lib/api";
+
 import ProtectedRoute from "@/app/components/routes/ProtectedRoute";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import api from "@/app/lib/api";
 
 export default function ManageBooks() {
   const [books, setBooks] = useState([]);
+  const [genres, setGenres] = useState([]); // New state for fetched genres
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editBook, setEditBook] = useState(null);
@@ -29,18 +32,31 @@ export default function ManageBooks() {
   const emptyForm = {
     title: "",
     author: "",
-    genre: "Philosophy",
+    genre: "", // Initialized as empty for dynamic selection
     description: "",
     cover: null,
   };
 
   const [formData, setFormData] = useState(emptyForm);
 
+  // Updated useEffect to fetch both books and genres
   useEffect(() => {
-    api
-      .get("/books")
-      .then((res) => setBooks(res.data))
-      .finally(() => setInitialLoading(false));
+    const fetchArchiveData = async () => {
+      try {
+        const [booksRes, genresRes] = await Promise.all([
+          api.get("/books"),
+          api.get("/admin/genres"), // Assuming your endpoint for genres is /genres
+        ]);
+        setBooks(booksRes.data);
+        setGenres(genresRes.data);
+      } catch (err) {
+        toast.error("Archive sync failed");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchArchiveData();
   }, []);
 
   const handleChange = (e) =>
@@ -51,7 +67,10 @@ export default function ManageBooks() {
 
   const openCreateModal = () => {
     setEditBook(null);
-    setFormData(emptyForm);
+    setFormData({
+      ...emptyForm,
+      genre: genres[0]?.name || "", // Default to first available genre
+    });
     setIsModalOpen(true);
   };
 
@@ -216,6 +235,7 @@ export default function ManageBooks() {
           </div>
         </div>
 
+        {/* Delete Confirmation Modal (Unchanged) */}
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             <div
@@ -256,6 +276,7 @@ export default function ManageBooks() {
           </div>
         )}
 
+        {/* Update/Create Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-6">
             <div
@@ -311,6 +332,34 @@ export default function ManageBooks() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <Layers size={12} /> Manuscript Classification
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="genre"
+                      value={formData.genre}
+                      onChange={handleChange}
+                      required
+                      className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        Select Classification...
+                      </option>
+                      {genres.map((g) => (
+                        <option key={g._id} value={g.name}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                    {/* Custom Arrow for the Select box */}
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                      <div className="border-t-4 border-l-4 border-r-4 border-t-stone-900 border-l-transparent border-r-transparent"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
                     <BookOpen size={12} /> Manuscript Abstract
                   </label>
                   <textarea
@@ -343,9 +392,14 @@ export default function ManageBooks() {
 
                 <button
                   type="submit"
-                  className="w-full bg-stone-900 text-stone-100 py-5 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-emerald-800 transition-all"
+                  disabled={isProcessing}
+                  className="w-full bg-stone-900 text-stone-100 py-5 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-emerald-800 transition-all disabled:bg-stone-400"
                 >
-                  {editBook ? "Finalize Update" : "Authorize Creation"}
+                  {isProcessing
+                    ? "Processing Protocol..."
+                    : editBook
+                    ? "Finalize Update"
+                    : "Authorize Creation"}
                 </button>
               </form>
             </div>
