@@ -35,6 +35,7 @@ export default function ManageBooks() {
     genre: "",
     description: "",
     cover: null,
+    totalPages: "", // new field
   };
 
   const [formData, setFormData] = useState(emptyForm);
@@ -81,6 +82,7 @@ export default function ManageBooks() {
       genre: book.genre,
       description: book.description,
       cover: null,
+      totalPages: book.totalPages || "", // prefill totalPages
     });
     setIsModalOpen(true);
   };
@@ -91,7 +93,11 @@ export default function ManageBooks() {
 
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (value) payload.append(key, value);
+      if (value) {
+        // ensure totalPages is number
+        if (key === "totalPages") payload.append(key, parseInt(value, 10));
+        else payload.append(key, value);
+      }
     });
 
     try {
@@ -165,6 +171,9 @@ export default function ManageBooks() {
                   <th className="px-8 py-5 hidden md:table-cell border-l border-stone-800">
                     Scribe / Author
                   </th>
+                  <th className="px-8 py-5 hidden md:table-cell border-l border-stone-800">
+                    Total Pages
+                  </th>
                   <th className="px-8 py-5 text-right border-l border-stone-800">
                     Directives
                   </th>
@@ -209,6 +218,11 @@ export default function ManageBooks() {
                         {book.author}
                       </span>
                     </td>
+                    <td className="px-8 py-6 hidden md:table-cell border-l border-stone-50">
+                      <span className="text-stone-600 font-medium">
+                        {book.totalPages}
+                      </span>
+                    </td>
                     <td className="px-8 py-6 text-right border-l border-stone-50">
                       <div className="flex justify-end items-center gap-4">
                         <button
@@ -234,6 +248,7 @@ export default function ManageBooks() {
           </div>
         </div>
 
+        {/* Delete Modal */}
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             <div
@@ -274,6 +289,7 @@ export default function ManageBooks() {
           </div>
         )}
 
+        {/* Create/Edit Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-6">
             <div
@@ -298,7 +314,7 @@ export default function ManageBooks() {
               </header>
 
               <form className="space-y-8" onSubmit={submitBook}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
                       <Type size={12} /> Title of Work
@@ -321,6 +337,21 @@ export default function ManageBooks() {
                       value={formData.author}
                       onChange={handleChange}
                       placeholder="Plato"
+                      required
+                      className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                      <BookOpen size={12} /> Total Pages
+                    </label>
+                    <input
+                      name="totalPages"
+                      type="number"
+                      min="1"
+                      value={formData.totalPages}
+                      onChange={handleChange}
+                      placeholder="e.g., 300"
                       required
                       className="w-full bg-white border-2 border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-stone-900 transition-colors"
                     />

@@ -1,137 +1,197 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import ReadingProgressChart from "@/app/components/charts/ReadingProgressChart";
-import GenrePieChart from "@/app/components/charts/GenrePieChart";
-import BookCard from "@/app/components/shared/BookCard";
-import { Trophy, Flame, Library } from "lucide-react";
 import api from "@/app/lib/api";
+import { BookOpen, Target, TrendingUp, LibraryBig } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import Image from "next/image";
+import StatCard from "@/app/components/charts/StatCard";
+
+const COLORS = ["#2f766d", "#b08968", "#7c6f64", "#a98467", "#6b705c"];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
-
-  const formattedDate = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/user/stats").then((res) => setStats(res.data));
-    api.get("/recommendations").then((res) => setRecommendations(res.data));
+    Promise.all([api.get("/user/stats"), api.get("/recommendations")])
+      .then(([statsRes, recRes]) => {
+        setStats(statsRes.data);
+        setRecommendations(recRes.data);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!stats) {
+  if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fdfbf7]">
-        <div className="animate-pulse font-serif italic text-stone-400">
-          Unrolling the scrolls...
-        </div>
+        <p className="font-serif italic text-stone-400">
+          Turning pages, gathering insights...
+        </p>
       </div>
     );
-  }
 
-  const progressPercentage = Math.min(
-    (stats.booksRead / stats.goal) * 100,
-    100
+  if (!stats) return null;
+
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const monthlyData = MONTHS.map((month, index) => {
+    const found = stats.monthly.find((m) => m._id === index + 1);
+    return { month, count: found ? found.count : 0 };
+  });
+
+  const genreData = stats.genres.map((g) => ({
+    name: g.genre,
+    value: g.count,
+  }));
+
+  const goalProgress = Math.min(
+    100,
+    Math.round((stats.booksRead / stats.goal) * 100)
   );
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] relative overflow-hidden py-16">
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16 text-stone-800">
-        {/* Header */}
-        <header className="mb-12 border-l-4 border-emerald-700 pl-6">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-stone-900 italic tracking-tight">
-            The Reader's <span className="text-emerald-700">Ledger</span>
+    <div className="min-h-screen bg-[#fdfbf7] py-36 px-6">
+      <div className="max-w-7xl mx-auto space-y-20">
+        {/* HEADER */}
+        <header className="border-b border-stone-200 pb-8">
+          <h1 className="text-5xl font-serif font-bold italic text-stone-900">
+            Reading <span className="text-emerald-700">Dashboard</span>
           </h1>
-          <p className="text-stone-500 text-xs uppercase tracking-[0.4em] font-black mt-3">
-            Archive Entry: {formattedDate} • Status: Active
+          <p className="uppercase tracking-[0.3em] text-xs font-bold text-stone-400 mt-3">
+            Your personal reading journey
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left Column */}
-          <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl shadow-stone-200/50">
-              <h2 className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                <Trophy size={14} className="text-amber-600" /> Annual Objective
-              </h2>
+        {/* STATS */}
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <StatCard
+            icon={BookOpen}
+            label="Books Read"
+            value={stats.booksRead}
+          />
+          <StatCard
+            icon={LibraryBig}
+            label="Total Books"
+            value={stats.totalBooks}
+          />
+          <StatCard icon={Target} label="Annual Goal" value={stats.goal} />
+          <StatCard
+            icon={TrendingUp}
+            label="Goal Progress"
+            value={`${goalProgress}%`}
+          />
+        </section>
 
-              <div className="flex items-baseline gap-3 mb-4">
-                <span className="text-6xl font-serif font-bold text-stone-900">
-                  {stats.booksRead}
-                </span>
-                <span className="text-stone-400 font-serif italic text-lg">
-                  / {stats.goal} volumes
-                </span>
-              </div>
+        {/* GOAL BAR */}
+        <section className="bg-white border border-stone-200 rounded-3xl p-8 shadow-sm">
+          <h2 className="font-serif text-2xl italic mb-4 text-stone-800">
+            Annual Reading Challenge
+          </h2>
+          <div className="w-full bg-stone-200/40 rounded-full h-4 overflow-hidden">
+            <div
+              className="bg-emerald-700 h-4 transition-all"
+              style={{ width: `${goalProgress}%` }}
+            />
+          </div>
+          <p className="mt-3 text-sm text-stone-500 font-serif italic">
+            {stats.booksRead} of {stats.goal} books completed
+          </p>
+        </section>
 
-              <div className="relative w-full h-2 bg-stone-100 rounded-full mt-8 overflow-hidden border border-stone-200">
-                <div
-                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-800 via-emerald-600 to-emerald-500 transition-all duration-1000"
-                  style={{ width: `${progressPercentage}%` }}
+        {/* CHARTS */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* MONTHLY */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-8 shadow-sm">
+            <h3 className="font-serif italic text-xl mb-6">
+              Books Read Per Month
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#2f766d"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border border-stone-200 p-5 rounded-2xl text-center">
-                <Flame className="mx-auto text-orange-600 mb-2" />
-                <div className="text-2xl font-serif font-bold">12 Days</div>
-                <div className="text-[9px] uppercase tracking-widest text-stone-400">
-                  Streak
-                </div>
-              </div>
-
-              <div className="bg-white border border-stone-200 p-5 rounded-2xl text-center">
-                <Library className="mx-auto text-amber-600 mb-2" />
-                <div className="text-2xl font-serif font-bold">
-                  {stats.totalBooks || 142}
-                </div>
-                <div className="text-[9px] uppercase tracking-widest text-stone-400">
-                  Archive
-                </div>
-              </div>
-            </div>
+              </LineChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Charts */}
-          <div className="lg:col-span-2 grid md:grid-cols-2 gap-8">
-            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl">
-              <h3 className="text-[10px] uppercase tracking-widest mb-6">
-                Genre Analytics
-              </h3>
-              <div className="h-[280px]">
-                <GenrePieChart data={stats.genres} />
-              </div>
-            </div>
+          {/* GENRES */}
+          <div className="bg-white border border-stone-200 rounded-3xl p-8 shadow-sm">
+            <h3 className="font-serif italic text-xl mb-6">Favorite Genres</h3>
 
-            <div className="bg-white border border-stone-200 p-8 rounded-4xl shadow-xl">
-              <h3 className="text-[10px] uppercase tracking-widest mb-6">
-                Reading Progress
-              </h3>
-              <div className="h-[280px]">
-                <ReadingProgressChart monthly={stats.monthly} />
-              </div>
-            </div>
+            {genreData.length === 0 ? (
+              <p className="italic text-stone-400 font-serif">
+                No genre data yet.
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={genreData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={110}
+                    label
+                  >
+                    {genreData.map((_, index) => (
+                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* Recommendations Carousel */}
-        <section className="mt-24 relative">
-          <div className="flex items-center gap-6 mb-10">
+        {/* RECOMMENDATIONS CAROUSEL */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-6">
             <h2 className="text-3xl font-serif font-bold italic text-stone-900">
-              Curated <span className="text-amber-700">Selection</span>
+              Recommended <span className="text-emerald-700">For You</span>
             </h2>
             <div className="h-px flex-grow bg-stone-200" />
           </div>
 
           {recommendations.length === 0 ? (
-            <p className="italic text-stone-400">
+            <p className="italic font-serif text-stone-400">
               No recommendations available yet.
             </p>
           ) : (
             <div className="relative">
-              {/* Fade edges */}
               <div className="pointer-events-none absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-[#fdfbf7] to-transparent z-10" />
               <div className="pointer-events-none absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-[#fdfbf7] to-transparent z-10" />
 
@@ -139,14 +199,27 @@ export default function Dashboard() {
                 {recommendations.map((book, i) => (
                   <div
                     key={i + 1}
-                    className="snap-start min-w-[160px] max-w-[160px] group relative transition-transform duration-300 hover:-translate-y-2"
-                    title={book.reason}
+                    className="snap-start min-w-[160px] max-w-[160px] group transition-transform hover:-translate-y-2"
                   >
-                    <BookCard book={book} />
+                    <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+                      <Image
+                        height={48}
+                        width={48}
+                        src={book.cover}
+                        alt={book.title}
+                        className="w-full h-[220px] object-cover"
+                      />
+                    </div>
+
+                    <h3 className="mt-3 font-serif font-bold italic text-stone-900 leading-tight">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-stone-500">{book.author}</p>
+
                     {book.reason && (
-                      <div className="mt-2 text-[10px] text-stone-400 italic opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="mt-1 text-[10px] italic text-stone-400 opacity-0 group-hover:opacity-100 transition">
                         {book.reason}
-                      </div>
+                      </p>
                     )}
                   </div>
                 ))}

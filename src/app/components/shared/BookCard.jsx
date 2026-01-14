@@ -8,7 +8,7 @@ export default function BookCard({ book }) {
     <div className="group relative bg-white border-2 border-stone-900 p-4 transition-all duration-300 hover:shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] flex flex-col h-full">
       <div className="absolute -top-3 left-4 z-10">
         <span className="bg-stone-900 text-stone-100 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-sm">
-          {book.genre || "Unclassified"}
+          {book?.genre}
         </span>
       </div>
 
