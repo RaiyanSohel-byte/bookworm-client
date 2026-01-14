@@ -27,8 +27,10 @@ const BookDetails = () => {
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const [shelf, setShelf] = useState(""); // "want", "reading", "read"
+  const [shelf, setShelf] = useState("");
   const [progress, setProgress] = useState({ pagesRead: 0, totalPages: 0 });
+  const [editingProgressId, setEditingProgressId] = useState(null);
+  const [editingProgressValue, setEditingProgressValue] = useState(0);
 
   const [recommended, setRecommended] = useState([]);
   const [shelves, setShelves] = useState({ want: [], reading: [], read: [] });
@@ -114,6 +116,7 @@ const BookDetails = () => {
       setShowReviewForm(false);
     } catch (err) {
       console.error("Failed to submit review", err);
+      toast.error("Failed to submit review");
     } finally {
       setSubmitting(false);
     }
@@ -166,6 +169,56 @@ const BookDetails = () => {
       );
     } catch (err) {
       console.error("Failed to add to shelf", err);
+      toast.error("Failed to add book to shelf");
+    }
+  };
+
+  const updateProgress = async (bookId, pagesRead) => {
+    try {
+      const bookData = shelves.reading.find((b) => b.bookId === bookId) || book;
+
+      const totalPages = bookData?.totalPages || 0;
+      const targetShelf = pagesRead >= totalPages ? "read" : "reading";
+
+      await api.patch(`/users/shelves/${bookId}`, {
+        pagesRead: parseInt(pagesRead, 10),
+        shelf: targetShelf,
+      });
+
+      setShelves((prev) => {
+        const updatedShelves = { ...prev };
+        ["want", "reading", "read"].forEach((s) => {
+          updatedShelves[s] = updatedShelves[s].filter(
+            (b) => b.bookId !== bookId
+          );
+        });
+
+        const entry = {
+          bookId,
+          title: bookData.title,
+          cover: bookData.cover,
+          pagesRead: parseInt(pagesRead, 10),
+          totalPages: totalPages,
+        };
+
+        if (targetShelf === "read") {
+          delete entry.pagesRead;
+          delete entry.totalPages;
+        }
+
+        updatedShelves[targetShelf] = [...updatedShelves[targetShelf], entry];
+        return updatedShelves;
+      });
+
+      setEditingProgressId(null);
+      toast.success(
+        targetShelf === "read"
+          ? `"${bookData.title}" marked as Read!`
+          : "Progress updated successfully"
+      );
+    } catch (err) {
+      console.error("Failed to update progress", err);
+      toast.error("Failed to update progress");
     }
   };
 
@@ -201,7 +254,9 @@ const BookDetails = () => {
             </span>
           </button>
 
+          {/* Shelf Buttons */}
           <div className="flex gap-2">
+            {/* Want to Read */}
             <button
               onClick={() => addToShelf("want")}
               className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-colors"
@@ -209,14 +264,42 @@ const BookDetails = () => {
               <BookmarkPlus size={16} />
               Want to Read
             </button>
+
+            {/* Currently Reading */}
             <button
               onClick={() => addToShelf("reading")}
               className="flex items-center gap-2 bg-emerald-800 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-900 transition-colors"
             >
               Currently Reading
             </button>
+
+            {/* Read */}
             <button
-              onClick={() => addToShelf("read")}
+              onClick={async () => {
+                try {
+                  await api.patch(`/users/shelves/${id}`, {
+                    pagesRead: book.totalPages || 0,
+                    shelf: "read",
+                  });
+
+                  setShelves((prev) => ({
+                    ...prev,
+                    read: [
+                      ...prev.read,
+                      {
+                        bookId: id,
+                        title: book.title,
+                        cover: book.cover,
+                      },
+                    ],
+                  }));
+
+                  toast.success(`Marked "${book.title}" as Read`);
+                } catch (err) {
+                  console.error("Failed to mark as read", err);
+                  toast.error("Failed to mark as Read");
+                }
+              }}
               className="flex items-center gap-2 bg-stone-700 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-colors"
             >
               Read
@@ -268,7 +351,7 @@ const BookDetails = () => {
             </div>
 
             <div className="md:col-span-8 space-y-10">
-              <div className="grid grid-cols-2 gap-8 border-b-2 border-stone-100 pb-10">
+              <div className="grid grid-cols-3 gap-8 border-b-2 border-stone-100 pb-10">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 block">
                     Primary Scribe
@@ -277,6 +360,7 @@ const BookDetails = () => {
                     {book.author}
                   </p>
                 </div>
+
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 block">
                     Classification
@@ -285,6 +369,17 @@ const BookDetails = () => {
                     {book.genre}
                   </span>
                 </div>
+
+                {book.totalPages && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400 block">
+                      Length
+                    </label>
+                    <p className="font-mono text-lg text-stone-900">
+                      {book.totalPages} pages
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -331,7 +426,7 @@ const BookDetails = () => {
           </section>
         )}
 
-        {/* My Shelves Section */}
+        {/* My Shelves */}
         <section className="mb-12">
           <h2 className="text-3xl font-serif font-bold text-stone-900 italic mb-4">
             My Shelves
@@ -369,14 +464,59 @@ const BookDetails = () => {
                             className="object-cover"
                           />
                         )}
-                        <div className="flex flex-col">
+                        <div className="flex flex-col flex-1">
                           <span className="font-serif font-bold italic text-stone-900">
                             {b.title}
                           </span>
                           {type === "reading" && (
-                            <span className="text-[10px] text-stone-500">
-                              {b.pagesRead}/{b.totalPages} pages read
-                            </span>
+                            <div className="flex items-center gap-2">
+                              {editingProgressId === b.bookId ? (
+                                <>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={b.totalPages}
+                                    value={editingProgressValue}
+                                    onChange={(e) =>
+                                      setEditingProgressValue(e.target.value)
+                                    }
+                                    className="border border-stone-300 px-2 py-1 w-16 text-sm"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      updateProgress(
+                                        b.bookId,
+                                        editingProgressValue
+                                      )
+                                    }
+                                    className="bg-emerald-800 text-white px-2 py-1 text-[10px] font-bold uppercase"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingProgressId(null)}
+                                    className="bg-stone-400 text-white px-2 py-1 text-[10px] font-bold uppercase"
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-[10px] text-stone-500">
+                                    {b.pagesRead}/{b.totalPages} pages read
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      setEditingProgressId(b.bookId);
+                                      setEditingProgressValue(b.pagesRead);
+                                    }}
+                                    className="bg-stone-900 text-white px-2 py-1 text-[10px] font-bold uppercase"
+                                  >
+                                    Update
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>

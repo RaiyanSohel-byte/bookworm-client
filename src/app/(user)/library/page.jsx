@@ -1,47 +1,17 @@
 "use client";
-
+import api from "@/app/lib/api";
 import { useEffect, useState } from "react";
 import BookCard from "@/app/components/shared/BookCard";
 import { Bookmark, Glasses, CheckCircle2, Library } from "lucide-react";
-import api from "@/app/lib/api";
 
 export default function MyLibrary() {
   const [library, setLibrary] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchLibrary = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/library");
-      setLibrary(res.data);
-    } catch (err) {
-      console.error("Failed to fetch library:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchLibrary();
+    api.get("/library").then((res) => setLibrary(res.data));
   }, []);
 
-  const updateProgress = async (bookId, pagesRead, totalPages) => {
-    try {
-      const newShelf = pagesRead >= totalPages ? "read" : "reading";
-
-      await api.patch(`/library/${bookId}`, {
-        pagesRead,
-        shelf: newShelf,
-      });
-
-      fetchLibrary(); // Refresh library after update
-    } catch (err) {
-      console.error("Failed to update progress:", err);
-      alert("Error updating progress");
-    }
-  };
-
-  if (loading || !library)
+  if (!library)
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fdfbf7]">
         <div className="animate-pulse font-serif italic text-stone-400">
@@ -77,7 +47,7 @@ export default function MyLibrary() {
   return (
     <div className="min-h-screen bg-[#fdfbf7] relative overflow-hidden py-20 pb-20">
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        {/* Header */}
+        {/*header */}
         <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-stone-200 pb-8">
           <div>
             <h1 className="text-5xl font-serif font-bold text-stone-900 italic tracking-tight">
@@ -85,7 +55,7 @@ export default function MyLibrary() {
             </h1>
             <p className="text-stone-500 text-xs uppercase tracking-[0.4em] font-black mt-3 flex items-center gap-2">
               <Library size={14} className="text-emerald-800" /> Logged in
-              Archive: {new Date().toISOString().split("T")[0]}
+              Archive: 2026.01.13
             </p>
           </div>
           <div className="text-right">
@@ -98,7 +68,7 @@ export default function MyLibrary() {
           </div>
         </header>
 
-        {/* Shelves */}
+        {/* Shelf */}
         <div className="space-y-24">
           {["reading", "want", "read"].map((shelfKey) => {
             const config = shelfConfig[shelfKey];
@@ -106,7 +76,6 @@ export default function MyLibrary() {
 
             return (
               <section key={shelfKey} className="relative">
-                {/* Shelf Header */}
                 <div className="flex items-center gap-4 mb-12">
                   <div
                     className={`flex items-center gap-3 px-6 py-2 rounded-full border shadow-sm ${config.bg} ${config.border} backdrop-blur-md`}
@@ -122,7 +91,7 @@ export default function MyLibrary() {
                   <div className="h-[1px] flex-grow bg-gradient-to-r from-stone-200 to-transparent" />
                 </div>
 
-                {/* Books Grid */}
+                {/*book grid*/}
                 {books.length === 0 ? (
                   <div className="py-16 px-8 rounded-[2rem] border border-dashed border-stone-200 text-center bg-stone-50/50">
                     <p className="font-serif italic text-stone-400">
@@ -142,40 +111,23 @@ export default function MyLibrary() {
 
                         <BookCard book={book} />
 
-                        {/* Reading progress for Currently Studying */}
+                        {/* Reading progress for "Currently Studying" */}
                         {shelfKey === "reading" &&
                           book.pagesRead !== undefined &&
                           book.totalPages && (
                             <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-1">
-                              {/* Numeric input */}
-                              <div className="text-[9px] font-mono text-stone-600 text-right flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={book.totalPages}
-                                  value={book.pagesRead}
-                                  onChange={(e) =>
-                                    updateProgress(
-                                      book._id,
-                                      parseInt(e.target.value),
-                                      book.totalPages
-                                    )
-                                  }
-                                  className="w-14 p-1 rounded border border-stone-700 bg-[#181411] text-stone-200 text-right text-xs"
-                                />
-                                / {book.totalPages} pages
-                                <span className="ml-1 text-[9px] text-stone-400">
-                                  (
-                                  {Math.min(
-                                    100,
-                                    Math.round(
-                                      (book.pagesRead / book.totalPages) * 100
-                                    )
-                                  )}
-                                  %)
-                                </span>
+                              {/* Numeric progress */}
+                              <div className="text-[9px] font-mono text-stone-600 text-right">
+                                {book.pagesRead} / {book.totalPages} pages (
+                                {Math.min(
+                                  100,
+                                  Math.round(
+                                    (book.pagesRead / book.totalPages) * 100
+                                  )
+                                )}
+                                %)
                               </div>
-                              {/* Progress Bar */}
+                              {/* Progress bar */}
                               <div className="bg-stone-200/30 rounded-full h-2 overflow-hidden">
                                 <div
                                   className="bg-emerald-700 h-2 rounded-full transition-all"
@@ -192,7 +144,7 @@ export default function MyLibrary() {
                             </div>
                           )}
 
-                        {/* Completion Badge for Read Shelf */}
+                        {/* Completion Badge for "Completed Archives" */}
                         {shelfKey === "read" && (
                           <div className="absolute top-2 right-2 bg-emerald-100 text-emerald-700 p-1.5 rounded-full border border-emerald-200 shadow-sm">
                             <CheckCircle2 size={12} />

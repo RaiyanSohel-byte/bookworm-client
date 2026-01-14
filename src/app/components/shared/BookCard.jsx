@@ -1,29 +1,32 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { FileSearch, Bookmark, Quote } from "lucide-react";
+import { FileSearch, Bookmark, Quote, BookOpen } from "lucide-react";
 
 export default function BookCard({ book }) {
   return (
     <div className="group relative bg-white border-2 border-stone-900 p-4 transition-all duration-300 hover:shadow-[8px_8px_0px_0px_rgba(28,25,23,1)] flex flex-col h-full">
+      {/* GENRE TAG */}
       <div className="absolute -top-3 left-4 z-10">
         <span className="bg-stone-900 text-stone-100 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-sm">
           {book?.genre}
         </span>
       </div>
 
+      {/* COVER */}
       <div className="relative aspect-[3/4] overflow-hidden border border-stone-100 mb-5">
         {book?.cover && (
           <Image
-            height={48}
-            width={48}
-            src={book?.cover}
+            height={400}
+            width={300}
+            src={book.cover}
             className="w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
             alt={book?.title || "Book"}
           />
         )}
 
-        {book.reason && (
+        {/* REASON OVERLAY */}
+        {book?.reason && (
           <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm p-6 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Quote className="text-emerald-500 mb-3" size={20} />
             <p className="text-white font-serif italic text-sm text-center leading-relaxed">
@@ -34,6 +37,7 @@ export default function BookCard({ book }) {
         )}
       </div>
 
+      {/* CONTENT */}
       <div className="space-y-1 flex-grow">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-serif line-clamp-2 font-bold text-xl text-stone-900 italic leading-tight group-hover:text-emerald-900 transition-colors">
@@ -49,8 +53,17 @@ export default function BookCard({ book }) {
           Scribe:{" "}
           <span className="text-stone-600 line-clamp-1">{book.author}</span>
         </p>
+
+        {/* TOTAL PAGES */}
+        {book?.totalPages && (
+          <div className="mt-2 flex items-center gap-1 text-[10px] font-mono text-stone-500">
+            <BookOpen size={12} />
+            <span>{book.totalPages} pages</span>
+          </div>
+        )}
       </div>
 
+      {/* ACTION */}
       <div className="mt-6 pt-4 border-t border-dashed border-stone-200">
         <Link
           href={`/browse/${book?._id || book.bookId}`}
